@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Group 5</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('img/pic.jpg');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+    
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 600px;
+    }
+
+    h1, h2, p {
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+
+    h2 {
+      margin-top: 20px;
+      color: #ffffff;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #ff39cd;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #ff33a0;
+    }
+
+    p {
+      margin-top: 10px;
+      color: #ffffff;
+    }
+
+    .encrypted-word {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Group 5</h1>
+
+    <h2>RSA</h2>
+    <input type="number" id="rsa-p" placeholder="Enter p (prime number)" required>
+    <input type="number" id="rsa-q" placeholder="Enter q (prime number)" required>
+    <input type="number" id="rsa-e" placeholder="Enter e (public exponent)" required>
+    <input type="text" id="rsa-input" placeholder="Enter a word" required>
+    <button onclick="rsaEncrypt()">Encrypt</button>
+    <p id="rsa-error" class="error"></p>
+    <p>Encrypted word (RSA): <span id="rsa-encrypted-word" class="encrypted-word"></span></p>
+
+    <h2>Cipher</h2>
+    <input type="text" id="cipher-input" placeholder="Enter a word" required>
+    <input type="number" id="cipher-key" placeholder="Enter a key (shift value)" required>
+    <button onclick="cipherEncrypt()">Encrypt</button>
+    <p id="cipher-error" class="error"></p>
+    <p>Encrypted word (Cipher): <span id="cipher-encrypted-word" class="encrypted-word"></span></p>
+
+    <script>
+      function modPow(base, exponent, modulus) {
+        let result = 1n;
+        base = base % modulus;
+
+        while (exponent > 0n) {
+          if (exponent % 2n === 1n) {
+            result = (result * base) % modulus;
+          }
+          exponent = exponent >> 1n;
+          base = (base * base) % modulus;
+        }
+
+        return result;
+      }
+
+      function rsaEncrypt() {
+        const rsaP = BigInt(document.getElementById('rsa-p').value);
+        const rsaQ = BigInt(document.getElementById('rsa-q').value);
+        const rsaE = BigInt(document.getElementById('rsa-e').value);
+        const rsaN = rsaP * rsaQ;
+
+        if (rsaE >= rsaN) {
+          document.getElementById('rsa-error').textContent = "Error: 'e' must be smaller than 'n'.";
+          document.getElementById('rsa-encrypted-word').textContent = "";
+          return;
+        }
+
+        const wordInput = document.getElementById('rsa-input').value;
+        let encryptedWord = '';
+
+        for (let i = 0; i < wordInput.length; i++) {
+          const charCode = BigInt(wordInput.charCodeAt(i));
+          const encrypted = modPow(charCode, rsaE, rsaN);
+          encryptedWord += String.fromCharCode(Number(encrypted) % 26 + 65);
+        }
+
+        document.getElementById('rsa-error').textContent = "";
+        document.getElementById('rsa-encrypted-word').textContent = encryptedWord;
+      }
+
+      function cipherEncrypt() {
+        const wordInput = document.getElementById('cipher-input').value;
+        const key = parseInt(document.getElementById('cipher-key').value);
+
+        if (key < 0 || key > 25) {
+          document.getElementById('cipher-error').textContent = "Error: Key must be between 0 and 25.";
+          document.getElementById('cipher-encrypted-word').textContent = "";
+          return;
+        }
+
+        let encryptedWord = '';
+
+        for (let i = 0; i < wordInput.length; i++) {
+          let charCode = wordInput.charCodeAt(i);
+
+          if (charCode >= 65 && charCode <= 90) { // Uppercase letters
+            charCode = ((charCode - 65 + key) % 26) + 65;
+            encryptedWord += String.fromCharCode(charCode);
+          } else if (charCode >= 97 && charCode <= 122) { // Lowercase letters
+            charCode = ((charCode - 97 + key) % 26) + 97;
+            encryptedWord += String.fromCharCode(charCode);
+          } else {
+            encryptedWord += wordInput[i]; // Non-alphabet characters are unchanged
+          }
+        }
+
+        document.getElementById('cipher-error').textContent = "";
+        document.getElementById('cipher-encrypted-word').textContent = encryptedWord;
+      }
+    </script>
+  </div>
+</body>
+</html>
